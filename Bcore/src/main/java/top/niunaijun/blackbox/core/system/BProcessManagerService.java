@@ -47,9 +47,12 @@ public class BProcessManagerService implements ISystemService {
     }
 
     public ProcessRecord startProcessLocked(String packageName, String processName, int userId, int bpid, int callingPid) {
+        Log.d(TAG, "startProcess package=" + packageName + " process=" + processName + " userId=" + userId + " bpid=" + bpid + " callingPid=" + callingPid);
         ApplicationInfo info = BPackageManagerService.get().getApplicationInfo(packageName, 0, userId);
-        if (info == null)
+        if (info == null) {
+            Log.e(TAG, "ApplicationInfo missing package=" + packageName + " userId=" + userId);
             return null;
+        }
         ProcessRecord app;
         int buid = BUserHandle.getUid(userId, BPackageManagerService.get().getAppId(packageName));
         synchronized (mProcessLock) {
@@ -72,6 +75,7 @@ public class BProcessManagerService implements ISystemService {
                 Slog.d(TAG, "init bUid = " + buid + ", bPid = " + bpid);
             }
             if (bpid == -1) {
+                Log.e(TAG, "No processes available package=" + packageName + " userId=" + userId);
                 throw new RuntimeException("No processes available");
             }
             app = new ProcessRecord(info, processName);
@@ -88,7 +92,7 @@ public class BProcessManagerService implements ISystemService {
                 mProcessMap.put(buid, bProcess);
             }
             if (!initAppProcessL(app)) {
-                
+                Log.e(TAG, "initAppProcess failed package=" + packageName + " process=" + processName + " userId=" + userId + " bpid=" + bpid);
                 bProcess.remove(processName);
                 mPidsSelfLocked.remove(app);
                 app = null;
@@ -147,13 +151,14 @@ public class BProcessManagerService implements ISystemService {
     }
 
     private boolean initAppProcessL(ProcessRecord record) {
-        Log.d(TAG, "initProcess: " + record.processName);
+        Log.d(TAG, "initProcess package=" + record.info.packageName + " process=" + record.processName + " userId=" + record.userId + " provider=" + record.getProviderAuthority());
         AppConfig appConfig = record.getClientConfig();
         Bundle bundle = new Bundle();
         bundle.putParcelable(AppConfig.KEY, appConfig);
         Bundle init = ProviderCall.callSafely(record.getProviderAuthority(), "_Black_|_init_process_", null, bundle);
         IBinder appThread = BundleCompat.getBinder(init, "_Black_|_client_");
         if (appThread == null || !appThread.isBinderAlive()) {
+            Log.e(TAG, "Virtual client binder unavailable process=" + record.processName + " package=" + record.info.packageName);
             return false;
         }
         attachClientL(record, appThread);

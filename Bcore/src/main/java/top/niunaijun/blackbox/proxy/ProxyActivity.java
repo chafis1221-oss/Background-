@@ -24,18 +24,23 @@ public class ProxyActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate");
+        Log.d(TAG, "onCreate component=" + getComponentName() + " intent=" + getIntent());
         finish();
 
-        HookManager.get().checkEnv(HCallbackProxy.class);
-
-
-        ProxyActivityRecord record = ProxyActivityRecord.create(getIntent());
-        if (record.mTarget != null) {
-            record.mTarget.setExtrasClassLoader(BlackBoxCore.getApplication().getClassLoader());
-            IntentSanitizer.restoreSanitizedClassExtras(record.mTarget, BActivityThread.getApplication().getClassLoader());
-            startActivity(record.mTarget);
-            return;
+        try {
+            HookManager.get().checkEnv(HCallbackProxy.class);
+            ProxyActivityRecord record = ProxyActivityRecord.create(getIntent());
+            Log.d(TAG, "record target=" + (record.mTarget == null ? "null" : record.mTarget.getComponent()));
+            if (record.mTarget != null) {
+                record.mTarget.setExtrasClassLoader(BlackBoxCore.getApplication().getClassLoader());
+                IntentSanitizer.restoreSanitizedClassExtras(record.mTarget, BActivityThread.getApplication().getClassLoader());
+                Log.d(TAG, "starting target=" + record.mTarget);
+                startActivity(record.mTarget);
+                return;
+            }
+            Log.e(TAG, "Missing proxy target record intent=" + getIntent());
+        } catch (Throwable e) {
+            Log.e(TAG, "Proxy launch failed intent=" + getIntent(), e);
         }
     }
 

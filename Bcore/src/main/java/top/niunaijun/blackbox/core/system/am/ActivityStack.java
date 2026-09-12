@@ -280,7 +280,9 @@ public class ActivityStack {
     private int startActivityInNewTaskLocked(int userId, Intent intent, ActivityInfo
             activityInfo, IBinder resultTo, int launchMode) {
         ActivityRecord record = newActivityRecord(intent, activityInfo, resultTo, userId);
+        Log.d(TAG, "startActivity newTask package=" + (activityInfo == null ? "null" : activityInfo.packageName) + " userId=" + userId + " intent=" + intent);
         Intent shadow = startActivityProcess(userId, intent, activityInfo, record);
+        Log.d(TAG, "startActivity proxy=" + shadow.getComponent() + " target=" + activityInfo);
 
         shadow.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         shadow.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
@@ -316,7 +318,7 @@ public class ActivityStack {
             BRIActivityManager.get(BRActivityManagerNative.get().getDefault()).startActivity(appThread, BlackBoxCore.getHostPkg(), intent,
                     resolvedType, resultTo, resultWho, requestCode, flags, null, options);
         } catch (Throwable e) {
-            e.printStackTrace();
+            Log.e(TAG, "realStartActivity failed intent=" + intent + " resolvedType=" + resolvedType, e);
         }
         return 0;
     }
