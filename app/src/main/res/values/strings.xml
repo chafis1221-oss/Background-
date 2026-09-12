@@ -70,6 +70,8 @@
     <string name="app_exclude_from_auto_freeze">Exclude this app from auto-freeze</string>
     <string name="app_excluded_from_auto_freeze_enabled">This app will stay out of auto-freeze</string>
     <string name="app_excluded_from_auto_freeze_disabled">This app will freeze normally again</string>
+    <string name="keep_virtual_apps_running">Keep virtual apps running</string>
+    <string name="keep_virtual_apps_running_summary">Keep virtual sessions active after leaving BlackBox</string>
     <string name="app_is_frozen">%s was frozen</string>
     <string name="app_clear">Clear Data</string>
 

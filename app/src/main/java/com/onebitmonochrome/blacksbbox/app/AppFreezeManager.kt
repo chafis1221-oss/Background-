@@ -60,7 +60,15 @@ object AppFreezeManager {
     }
 
     fun shouldAutoFreeze(packageName: String, userId: Int): Boolean {
-        return isGlobalAutoFreezeEnabled() && !isExcludedFromAutoFreeze(packageName, userId)
+        return isGlobalAutoFreezeEnabled() && !isKeepRunning(packageName, userId)
+    }
+
+    fun isKeepRunning(packageName: String, userId: Int): Boolean {
+        return isExcludedFromAutoFreeze(packageName, userId)
+    }
+
+    fun setKeepRunning(packageName: String, userId: Int, keepRunning: Boolean) {
+        setExcludedFromAutoFreeze(packageName, userId, keepRunning)
     }
 
     fun onActivityStarted(packageName: String?, userId: Int) {

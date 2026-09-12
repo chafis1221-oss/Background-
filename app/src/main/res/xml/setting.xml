@@ -22,6 +22,12 @@
                 app:title="@string/daemon_enable" />
 
         <SwitchPreferenceCompat
+                app:key="keep_virtual_apps_running"
+                app:title="@string/keep_virtual_apps_running"
+                app:summary="@string/keep_virtual_apps_running_summary"
+                app:defaultValue="true" />
+
+        <SwitchPreferenceCompat
                 app:key="use_vpn_network"
                 app:title="@string/use_vpn_network"
                 app:summary="@string/use_vpn_network_summary" />

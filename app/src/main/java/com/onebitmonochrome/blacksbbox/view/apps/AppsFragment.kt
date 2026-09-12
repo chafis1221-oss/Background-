@@ -8,7 +8,9 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.content.Intent
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
@@ -152,6 +154,11 @@ class AppsFragment : Fragment() {
                 try {
                     showLoading()
                     viewModel.launchApk(data.packageName, userID)
+                    ContextCompat.startForegroundService(
+                            requireContext(),
+                            Intent(requireContext(), com.onebitmonochrome.blacksbbox.service.VirtualSessionService::class.java)
+                                    .setAction(com.onebitmonochrome.blacksbbox.service.VirtualSessionService.ACTION_START)
+                    )
                 } catch (e: Exception) {
                     Log.e(TAG, "Error launching app: ${e.message}")
                     hideLoading()
