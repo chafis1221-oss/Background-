@@ -93,7 +93,7 @@ fun ROMsScreen(
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
             }
-            items(roms, key = { it.id }) { rom ->
+            items(roms.sortedWith(compareByDescending<ROMImage> { it.apiLevel == 30 }.thenByDescending { it.apiLevel }), key = { it.id }) { rom ->
                 ROMCard(
                     rom = rom,
                     hostAbis = hostAbis,

@@ -160,7 +160,8 @@ bool Container::setup_bind_mounts() {
         std::string target = root + e.suffix;
         mkdirs(target);
         if (mount(e.src, target.c_str(), e.fs, e.flags, e.data) != 0) {
-            VINE_LOGW("mount(%s → %s): %s", e.src, target.c_str(), strerror(errno));
+            VINE_LOGE("required mount(%s → %s) failed: %s", e.src, target.c_str(), strerror(errno));
+            return false;
         }
     }
 

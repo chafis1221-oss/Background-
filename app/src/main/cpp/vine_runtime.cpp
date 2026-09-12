@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <unordered_map>
+#include <cctype>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 
@@ -31,6 +32,14 @@ static jstring s2j(JNIEnv* env, const std::string& s) {
     return env->NewStringUTF(s.c_str());
 }
 
+static bool safe_id(const std::string& id) {
+    if (id.empty() || id.size() > 128) return false;
+    for (unsigned char c : id) {
+        if (!(std::isalnum(c) || c == '-' || c == '_')) return false;
+    }
+    return true;
+}
+
 extern "C" {
 
 JNIEXPORT jboolean JNICALL
@@ -59,6 +68,10 @@ Java_com_hexadecinull_vineos_native_VineRuntime_createInstance(
         JNIEnv* env, jobject,
         jstring j_instance_id, jstring, jint) {
     const std::string id = j2s(env, j_instance_id);
+    if (!safe_id(id)) {
+        VINE_LOGE("Invalid instance id");
+        return nullptr;
+    }
     auto& mgr = vine::NamespaceManager::instance();
     const std::string path = mgr.data_dir() + "/instances/" + id;
     if (!vine::mkdirs(path + "/rootfs") || !vine::mkdirs(path + "/data")) {
@@ -74,6 +87,10 @@ Java_com_hexadecinull_vineos_native_VineRuntime_startInstance(
         jstring j_instance_id, jstring j_instance_path, jint ram_mb, jint cpu_cores) {
     const std::string id = j2s(env, j_instance_id);
     const std::string path = j2s(env, j_instance_path);
+    if (!safe_id(id) || path.empty()) {
+        VINE_LOGE("Invalid instance configuration");
+        return 0;
+    }
     auto& mgr = vine::NamespaceManager::instance();
 
     const bool needs_qemu = !vine::host_supports_aarch32();

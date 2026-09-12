@@ -10,6 +10,7 @@ import java.io.File
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.zip.ZipFile
+import java.util.zip.ZipException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +65,8 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
     suspend fun download(rom: ROMImage, onProgress: (DownloadProgress) -> Unit): Result<File> = withContext(Dispatchers.IO) {
         runCatching {
             val dest = File(romsDir, "${rom.id}.vrom")
+            val temp = File(romsDir, "${rom.id}.vrom.part")
+            temp.delete()
             updateProgress(rom.id, 0L, rom.sizeBytes, ROMDownloadState.DOWNLOADING)
 
             val request = Request.Builder().url(rom.downloadUrl).build()
@@ -72,7 +75,7 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
                 val body = response.body
                 val totalBytes = body.contentLength().takeIf { it > 0 } ?: rom.sizeBytes
 
-                dest.outputStream().buffered(BUFFER_SIZE).use { out ->
+                temp.outputStream().buffered(BUFFER_SIZE).use { out ->
                     body.byteStream().buffered(BUFFER_SIZE).use { input ->
                         var downloaded = 0L
                         val buf = ByteArray(BUFFER_SIZE)
@@ -89,13 +92,15 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
             }
 
             updateProgress(rom.id, rom.sizeBytes, rom.sizeBytes, ROMDownloadState.VERIFYING)
-            if (!verifyFile(dest, rom.sha256)) {
-                dest.delete()
+            if (!verifyFile(temp, rom.sha256)) {
+                temp.delete()
                 updateProgress(rom.id, 0L, rom.sizeBytes, ROMDownloadState.CORRUPTED)
                 error("SHA-256 verification failed for ${rom.id}")
             }
+            validateVrom(temp)
+            check(temp.renameTo(dest)) { "Could not finalize ROM download" }
 
-            updateProgress(rom.id, rom.sizeBytes, rom.sizeBytes, ROMDownloadState.READY)
+            updateProgress(rom.id, dest.length(), dest.length(), ROMDownloadState.READY)
             refreshROM(rom.id, dest)
             dest
         }
@@ -122,7 +127,10 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
                 dest.outputStream().buffered(BUFFER_SIZE).use { output -> input.copyTo(output, BUFFER_SIZE) }
             } ?: error("Could not open the selected file")
 
-            val entry = runCatching { readVromManifest(dest) }.getOrNull()
+            val entry = runCatching {
+                validateVrom(dest)
+                readVromManifest(dest)
+            }.getOrNull()
                 ?: run {
                     dest.delete()
                     error("Not a valid .vrom file (missing or unreadable manifest.json)")
@@ -149,6 +157,17 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
             _localRoms.value = _localRoms.value + rom
             saveLocalRoms()
             rom
+        }
+    }
+
+    private fun validateVrom(vromFile: File) {
+        try {
+            ZipFile(vromFile).use { zip ->
+                check(zip.getEntry("manifest.json") != null) { "ROM manifest.json missing" }
+                check(zip.getEntry("rootfs.img") != null) { "ROM rootfs.img missing" }
+            }
+        } catch (e: ZipException) {
+            error("ROM is not a valid .vrom archive")
         }
     }
 
