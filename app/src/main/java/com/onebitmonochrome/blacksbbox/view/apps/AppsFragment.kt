@@ -154,11 +154,6 @@ class AppsFragment : Fragment() {
                 try {
                     showLoading()
                     viewModel.launchApk(data.packageName, userID)
-                    ContextCompat.startForegroundService(
-                            requireContext(),
-                            Intent(requireContext(), com.onebitmonochrome.blacksbbox.service.VirtualSessionService::class.java)
-                                    .setAction(com.onebitmonochrome.blacksbbox.service.VirtualSessionService.ACTION_START)
-                    )
                 } catch (e: Exception) {
                     Log.e(TAG, "Error launching app: ${e.message}")
                     hideLoading()
@@ -462,7 +457,13 @@ class AppsFragment : Fragment() {
                 try {
                     it?.run {
                         hideLoading()
-                        if (!it) {
+                        if (it) {
+                            ContextCompat.startForegroundService(
+                                    requireContext(),
+                                    Intent(requireContext(), com.onebitmonochrome.blacksbbox.service.VirtualSessionService::class.java)
+                                            .setAction(com.onebitmonochrome.blacksbbox.service.VirtualSessionService.ACTION_START)
+                            )
+                        } else {
                             toast(R.string.start_fail)
                         }
                     }

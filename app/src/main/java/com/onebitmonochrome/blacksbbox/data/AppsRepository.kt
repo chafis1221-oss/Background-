@@ -480,7 +480,7 @@ class AppsRepository {
             val result = BlackBoxCore.get().launchApk(packageName, userId)
             launchLiveData.postValue(result)
         } catch (e: Exception) {
-            Log.e(TAG, "Error launching APK: ${e.message}")
+            Log.e(TAG, "Error launching APK: package=$packageName userId=$userId", e)
             launchLiveData.postValue(false)
         }
     }
