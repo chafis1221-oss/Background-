@@ -27,7 +27,7 @@ public enum MainFragmentEnum {
     FRAGMENT_NETWORK(MainNetworkFragment.class, R.id.nav_network),
     FRAGMENT_SETTINGS(MainSettingsFragment.class, R.id.nav_settings);
 
-    public final static MainFragmentEnum DEFAULT = FRAGMENT_HOME;
+    public final static MainFragmentEnum DEFAULT = FRAGMENT_VM;
 
     private final Class<? extends MainBaseFragment> fragmentClass;
     private final @IdRes int navId;

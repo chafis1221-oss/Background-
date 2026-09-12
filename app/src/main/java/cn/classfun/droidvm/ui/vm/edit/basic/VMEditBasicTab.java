@@ -143,9 +143,12 @@ public final class VMEditBasicTab extends VMEditBaseTab {
         swDebug.setChecked(false);
         chooseProtectedVm.configure(
             ProtectedVM.class, VMConfig.NEW_VM_DEFAULT_PROTECTED_VM);
-        chooseBackend.configure(VMBackend.class, VMBackend.DEFAULT);
+        VMHypervisor detectedHypervisor = VMHypervisor.findPreferredHypervisor(VMBackend.DEFAULT);
+        VMBackend defaultBackend = detectedHypervisor == VMHypervisor.SOFT
+            ? VMBackend.QEMU : VMBackend.DEFAULT;
+        chooseBackend.configure(VMBackend.class, defaultBackend);
         chooseHypervisor.configure(
-            VMHypervisor.class, VMHypervisor.defaultForNewVm(VMBackend.DEFAULT));
+            VMHypervisor.class, VMHypervisor.defaultForNewVm(defaultBackend));
         choosePrepareLendMthp.configure(
             LendMthpMode.class, LendMthpMode.defaultForDevice(parent));
         parent.put("backend", VMBackend.DEFAULT);

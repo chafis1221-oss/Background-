@@ -65,9 +65,9 @@ public class VMConfig extends DataConfig {
         item.set("cpu_count", 1L);
         item.set("swiotlb_mb", 256L);
         item.set("balloon", false);
-        item.set("pmu", NEW_VM_DEFAULT_PMU);
+        item.set("pmu", false);
         item.set("rng", NEW_VM_DEFAULT_RNG);
-        item.set("smt", NEW_VM_DEFAULT_SMT);
+        item.set("smt", false);
         item.set("usb", NEW_VM_DEFAULT_USB);
         item.set("sandbox", false);
         item.set("hugepages", NEW_VM_DEFAULT_HUGEPAGES);
@@ -75,8 +75,11 @@ public class VMConfig extends DataConfig {
         item.set("gpu_vram_folio_threshold_kb", 1024L);
         item.set(LendMthpMode.KEY, LendMthpMode.defaultForDevice(context));
         item.set("protected_vm", NEW_VM_DEFAULT_PROTECTED_VM);
-        item.set("backend", VMBackend.DEFAULT);
-        item.set("hypervisor", VMHypervisor.defaultForNewVm(VMBackend.DEFAULT));
+        VMHypervisor detectedHypervisor = VMHypervisor.findPreferredHypervisor(VMBackend.DEFAULT);
+        VMBackend defaultBackend = detectedHypervisor == VMHypervisor.SOFT
+            ? VMBackend.QEMU : VMBackend.DEFAULT;
+        item.set("backend", defaultBackend);
+        item.set("hypervisor", VMHypervisor.defaultForNewVm(defaultBackend));
         item.set("extra_options", DataItem.newArray());
         item.set("environment_variables", DataItem.newArray());
         item.set(CpuPlacementPlan.KEY_AFFINITY, "");
